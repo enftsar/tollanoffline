@@ -1,0 +1,59 @@
+[
+  {
+    "id": "ecd967c1-3c91-4749-b6ab-c6fe91526352",
+    "action": "settings.updated",
+    "details": {
+      "bracketLocked": false,
+      "tournamentName": "Offline Country Cup",
+      "registrationLocked": false,
+      "minDurationSeconds": 10
+    },
+    "ip": "127.0.0.1",
+    "at": "2026-05-26T01:25:53.038Z",
+    "admin": "admin"
+  },
+  {
+    "id": "69d61531-c452-4938-b7f9-1b7452e79c94",
+    "action": "admin.login",
+    "details": {
+      "user": "admin"
+    },
+    "ip": "127.0.0.1",
+    "at": "2026-05-26T01:25:53.029Z",
+    "admin": "system"
+  },
+  {
+    "id": "77380e3a-1854-4aec-a05e-18f40b29b811",
+    "action": "recording.uploaded",
+    "details": {
+      "recordingId": "TOL-OFF-E2E-001",
+      "username": "E2EPlayer"
+    },
+    "ip": "127.0.0.1",
+    "at": "2026-05-26T01:25:40.511Z",
+    "admin": "system"
+  },
+  {
+    "id": "5ee0e69e-06e4-499c-bcee-a35dd63c9105",
+    "action": "settings.updated",
+    "details": {
+      "bracketLocked": false,
+      "registrationLocked": false,
+      "minDurationSeconds": 1,
+      "tournamentName": "Offline Country Cup"
+    },
+    "ip": "127.0.0.1",
+    "at": "2026-05-26T01:25:40.501Z",
+    "admin": "admin"
+  },
+  {
+    "id": "8637cf13-a23f-4fb2-bada-7147577038fd",
+    "action": "admin.login",
+    "details": {
+      "user": "admin"
+    },
+    "ip": "127.0.0.1",
+    "at": "2026-05-26T01:25:40.489Z",
+    "admin": "system"
+  }
+]
