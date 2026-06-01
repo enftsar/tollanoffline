@@ -244,13 +244,96 @@ function stopRecording() {
   stopButton.disabled = true;
 }
 
-function uploadRecording(entry) {
+function completeUpload(entry, uploadData) {
+  return fetch("/upload/complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ metadata: entry, objectKey: uploadData.objectKey, recordingId: uploadData.recordingId }),
+  }).then(async (response) => {
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Upload completion failed.");
+    return result;
+  });
+}
+
+function finalizeSuccessfulUpload(entry, result) {
+  lastStatusUrl = result.statusUrl;
+  setUpload(100, "Upload complete");
+  stateText.textContent = "Submitted";
+  document.body.classList.add("recording-submitted");
+  successRecordingId.textContent = entry.recordingId;
+  successPanel.classList.remove("is-hidden");
+  meta.innerHTML = `${entry.username} submitted recording ${entry.recordingId}. <button class="inline-button" type="button" data-open-status="${entry.recordingId}">Track status</button>`;
+}
+
+async function requestDirectUpload(entry) {
+  const response = await fetch("/upload/init", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ metadata: entry }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Upload could not be initialized.");
+  return result;
+}
+
+function uploadBlobWithProgress(url, entry, onComplete, onFailure) {
+  uploadStartedAt = Date.now();
+  const request = new XMLHttpRequest();
+  request.open("PUT", url);
+  request.setRequestHeader("Content-Type", "video/webm");
+  request.upload.addEventListener("progress", (event) => {
+    const elapsed = Math.max(1, (Date.now() - uploadStartedAt) / 1000);
+    const percent = event.lengthComputable ? Math.round((event.loaded / event.total) * 100) : 35;
+    const remaining = event.lengthComputable && event.loaded ? Math.max(0, Math.round((event.total - event.loaded) / (event.loaded / elapsed))) : "?";
+    setUpload(percent, `Uploading ${percent}% · ${entry.sizeMb} MB · ETA ${remaining}s`);
+  });
+  request.addEventListener("load", () => {
+    if (request.status >= 200 && request.status < 300) onComplete();
+    else onFailure(new Error("R2 upload failed."));
+  });
+  request.addEventListener("error", () => onFailure(new Error("The upload connection failed.")));
+  request.send(recordedBlob);
+}
+
+async function uploadRecording(entry) {
   submitButton.disabled = true;
   stateText.textContent = "Uploading";
   isUploading = true;
-  uploadStartedAt = Date.now();
   setStep("submit");
   setUpload(0, `Uploading 0% · ${entry.sizeMb} MB`);
+
+  try {
+    const uploadData = await requestDirectUpload(entry);
+    uploadBlobWithProgress(
+      uploadData.uploadUrl,
+      entry,
+      async () => {
+        try {
+          const result = await completeUpload(entry, uploadData);
+          isUploading = false;
+          finalizeSuccessfulUpload(entry, result);
+        } catch (error) {
+          isUploading = false;
+          submitButton.disabled = false;
+          setUpload(0, "Upload failed");
+          stateText.textContent = "Upload failed";
+          meta.textContent = error.message;
+        }
+      },
+      (error) => {
+        isUploading = false;
+        submitButton.disabled = false;
+        setUpload(0, "Upload failed");
+        stateText.textContent = "Upload failed";
+        meta.textContent = error.message;
+      },
+    );
+    return;
+  } catch {
+    uploadStartedAt = Date.now();
+  }
+
   const request = new XMLHttpRequest();
   request.open("POST", "/upload");
   request.setRequestHeader("X-Recording-Metadata", encodeURIComponent(JSON.stringify(entry)));
@@ -265,13 +348,7 @@ function uploadRecording(entry) {
     isUploading = false;
     if (request.status >= 200 && request.status < 300) {
       const result = JSON.parse(request.responseText);
-      lastStatusUrl = result.statusUrl;
-      setUpload(100, "Upload complete");
-      stateText.textContent = "Submitted";
-      document.body.classList.add("recording-submitted");
-      successRecordingId.textContent = entry.recordingId;
-      successPanel.classList.remove("is-hidden");
-      meta.innerHTML = `${entry.username} submitted recording ${entry.recordingId}. <button class="inline-button" type="button" data-open-status="${entry.recordingId}">Track status</button>`;
+      finalizeSuccessfulUpload(entry, result);
       return;
     }
     submitButton.disabled = false;
