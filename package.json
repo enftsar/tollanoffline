@@ -1,0 +1,22 @@
+{
+  "name": "tollan-offline-country-cup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline Country Cup recording and bracket portal for Tollan Universe tournaments.",
+  "main": "dev-server.js",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js",
+    "check": "node --check dev-server.js && node --check script.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "tollan",
+    "tournament",
+    "screen-recording",
+    "vercel"
+  ],
+  "license": "UNLICENSED"
+}
